@@ -80,14 +80,13 @@ def prepare_data(raw_data, drop_columns = None):
             errors = "raise"
         )
 
-    X = features.to_numpy()
+    X = features.to_numpy(dtype = np.float64, na_value = np.nan)
     feature_names = features.columns.to_numpy()
 
     return X, y, feature_names
 
 
-
-if __name__ == "__main__":
+def load_dataset(drop_nan_objects = True, drop_nan_features = False):
     drop_columns = [
         "Дата выполнения",
         "Средний объем эритроцита (MCV)",
@@ -105,25 +104,69 @@ if __name__ == "__main__":
 
     X1, y1, features1 = prepare_data(read_data(r"data\C91.1.xlsx"), drop_columns)
 
-    print(f"""C91.1
-        Objects:{X1.shape}
-        Lables: {y1.shape}
-    """)
-
     X2, y2, features2 = prepare_data(read_data(r"data\Z01.7.xlsx"), drop_columns)
-    
-    print(f"""Z01.7
-        Objects:{X2.shape}
-        Lables: {y2.shape}
-    """)
 
-    # Проверяем совпадение признаков и их порядка
-    assert np.array_equal(features1, features2), \
-        "Наборы или порядок признаков не совпадают"
-    
-    X = np.concatenate((X1, X2), axis = 0)
-    y = np.concatenate((y1, y2), axis = 0)    
-    print(f"""All
-        Objects:{X.shape}\n{X}\n
-        Lables: {y.shape}\n{y}\n
-    """)
+    features = features1
+    if not np.array_equal(features1, features2):
+        raise ValueError("Наборы или порядок признаков не совпадают")
+
+    X = np.concatenate((X1, X2), axis=0)
+    y = np.concatenate((y1, y2), axis=0)
+
+    # Удаление признаков с пропусками
+    if drop_nan_features:
+        valid = np.isfinite(X).all(axis = 0)
+
+        X = X[:, valid]
+        features = features[valid]
+
+    # Удаление объектов с пропусками
+    if drop_nan_objects:
+        valid = np.isfinite(X).all(axis = 1)
+
+        X = X[valid]
+        y = y[valid]
+
+    return X, y, features
+
+
+if __name__ == "__main__":
+    # Загрузка без фильтрации
+    X, y, features = load_dataset(
+        drop_nan_objects = False,
+        drop_nan_features = False
+    )
+
+    print(f"Исходная выборка: {X.shape}")
+    print(f"Класс -1: {np.sum(y == -1)}")
+    print(f"Класс  1: {np.sum(y == 1)}")
+
+    # Проверка пропусков
+    nan_mask = ~np.isfinite(X)
+
+    print(f"Объектов с пропусками: {nan_mask.any(axis = 1).sum()}")
+    print(f"Признаков с пропусками: {nan_mask.any(axis = 0).sum()}")
+    print(f"Всего пропусков: {nan_mask.sum()}")
+
+    # Проверка фильтрации объектов
+    X1, y1, features1 = load_dataset(
+        drop_nan_objects = True,
+        drop_nan_features = False
+    )
+
+    print(f"\nПосле фильтрации объектов: {X1.shape}")
+    print(f"Удалено объектов: {len(y) - len(y1)}")    
+    print(f"Класс -1: {np.sum(y1 == -1)}")
+    print(f"Класс  1: {np.sum(y1 == 1)}")
+
+    # Проверка фильтрации признаков
+    X2, y2, features2 = load_dataset(
+        drop_nan_objects = False,
+        drop_nan_features = True
+    )
+
+    print(f"\nПосле фильтрации признаков: {X2.shape}")
+    print(f"Удалено признаков: {len(features) - len(features2)}")
+    print("Удалённые признаки:", np.setdiff1d(features, features2))    
+    print(f"Класс -1: {np.sum(y2 == -1)}")
+    print(f"Класс  1: {np.sum(y2 == 1)}")
