@@ -54,6 +54,9 @@ def prepare_data(raw_data, drop_columns = None):
     if drop_columns is None:
         drop_columns = []
 
+    # Номера заявок
+    applications = raw_data["№ заявки"].to_numpy(dtype = np.uint64)
+
     # Формируем вектор классов
     y = np.where(raw_data["Диагноз"] == "C91.1", 1, -1)
 
@@ -83,7 +86,7 @@ def prepare_data(raw_data, drop_columns = None):
     X = features.to_numpy(dtype = np.float64, na_value = np.nan)
     feature_names = features.columns.to_numpy()
 
-    return X, y, feature_names
+    return X, y, feature_names, applications
 
 
 def load_dataset(drop_nan_objects = True, drop_nan_features = False):
@@ -93,25 +96,30 @@ def load_dataset(drop_nan_objects = True, drop_nan_features = False):
         "Среднее содержание гемоглобина в эритроците (MCH)",
         "Средняя концентрация гемоглобина в эритроците (MCHC)",
         "Тромбокрит (PCT)",
-        "Гранулоциты незрелые (IG%)",
-        "Нормобласты (NRBC%)",
-        "Нейтрофилы (NEU%)",
-        "Лимфоциты (LYM%)",
-        "Моноциты (MON%)",
-        "Эозинофилы (EO%)",
-        "Базофилы (BA%)"
+        "Гранулоциты незрелые (IG#)",
+        "Нормобласты (NRBC#)",
+        "Нейтрофилы (NEU#)",
+        "Лимфоциты (LYM#)",
+        "Моноциты (MON#)",
+        "Эозинофилы (EO#)",
+        "Базофилы (BA#)"
     ]
 
-    X1, y1, features1 = prepare_data(read_data(r"data\C91.1.xlsx"), drop_columns)
+    X1, y1, features1, applications1 = prepare_data(
+        read_data(r"data\C91.1.xlsx"), drop_columns
+    )
 
-    X2, y2, features2 = prepare_data(read_data(r"data\Z01.7.xlsx"), drop_columns)
+    X2, y2, features2, applications2 = prepare_data(
+        read_data(r"data\Z01.7.xlsx"), drop_columns
+    )
 
     features = features1
     if not np.array_equal(features1, features2):
         raise ValueError("Наборы или порядок признаков не совпадают")
 
-    X = np.concatenate((X1, X2), axis=0)
-    y = np.concatenate((y1, y2), axis=0)
+    X = np.concatenate((X1, X2), axis = 0)
+    y = np.concatenate((y1, y2), axis = 0)
+    applications = np.concatenate((applications1, applications2), axis = 0)
 
     # Удаление признаков с пропусками
     if drop_nan_features:
@@ -126,8 +134,9 @@ def load_dataset(drop_nan_objects = True, drop_nan_features = False):
 
         X = X[valid]
         y = y[valid]
+        applications = applications[valid]
 
-    return X, y, features
+    return X, y, features, applications
 
 
 if __name__ == "__main__":
