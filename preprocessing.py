@@ -1,6 +1,20 @@
 import pandas as pd
 import numpy as np
 
+DROP_COLUMNS = [
+    "Дата выполнения",
+    "Средний объем эритроцита (MCV)",
+    "Среднее содержание гемоглобина в эритроците (MCH)",
+    "Средняя концентрация гемоглобина в эритроците (MCHC)",
+    "Тромбокрит (PCT)",
+    "Гранулоциты незрелые (IG%)",
+    "Нормобласты (NRBC%)",
+    "Нейтрофилы (NEU%)",
+    "Лимфоциты (LYM%)",
+    "Моноциты (MON%)",
+    "Эозинофилы (EO%)",
+    "Базофилы (BA%)"
+]
 
 def read_data(file_path):
     df = pd.read_excel(file_path, sheet_name=0, header=3)
@@ -90,27 +104,13 @@ def prepare_data(raw_data, drop_columns = None):
 
 
 def load_dataset(drop_nan_objects = True, drop_nan_features = False):
-    drop_columns = [
-        "Дата выполнения",
-        "Средний объем эритроцита (MCV)",
-        "Среднее содержание гемоглобина в эритроците (MCH)",
-        "Средняя концентрация гемоглобина в эритроците (MCHC)",
-        "Тромбокрит (PCT)",
-        "Гранулоциты незрелые (IG#)",
-        "Нормобласты (NRBC#)",
-        "Нейтрофилы (NEU#)",
-        "Лимфоциты (LYM#)",
-        "Моноциты (MON#)",
-        "Эозинофилы (EO#)",
-        "Базофилы (BA#)"
-    ]
 
     X1, y1, features1, applications1 = prepare_data(
-        read_data(r"data\C91.1.xlsx"), drop_columns
+        read_data(r"data\C91.1.xlsx"), DROP_COLUMNS
     )
 
     X2, y2, features2, applications2 = prepare_data(
-        read_data(r"data\Z01.7.xlsx"), drop_columns
+        read_data(r"data\Z01.7.xlsx"), DROP_COLUMNS
     )
 
     features = features1
