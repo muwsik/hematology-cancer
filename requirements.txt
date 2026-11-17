@@ -3,3 +3,5 @@ plotly
 pandas
 numpy
 scikit-learn
+openpyxl
+starlette==1.3.1

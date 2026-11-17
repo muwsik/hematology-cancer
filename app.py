@@ -24,12 +24,10 @@ from preprocessing import DROP_COLUMNS, read_data, prepare_data
 
 
 st.set_page_config(
-    page_title = "Анализ классификации заявок",
+    page_title = "Hematology",
     page_icon = "🔬",
     layout = "wide"
 )
-
-st.title("Анализ результатов классификации")
 
 tab1, tab2, tab3, tab4 = st.tabs([
     "Подготовка данных",
@@ -469,6 +467,39 @@ with tab2:
                 width = "stretch",
                 hide_index = True
             )
+
+    #
+    #
+    # Влияние признаков
+    feature_importance = pd.DataFrame({
+        "Признак": features,
+        "Важность": model.feature_importances_
+    })
+
+    feature_importance = feature_importance.sort_values(
+        "Важность",
+        ascending = False
+    )
+
+    st.subheader("Влияние признаков")
+
+    fig = go.Figure(go.Bar(
+        x = feature_importance["Важность"],
+        y = feature_importance["Признак"],
+        orientation = "h",
+        marker_color = "steelblue",
+        hoverinfo = 'skip'
+    ))
+
+    fig.update_layout(
+        height = max(400, len(features) * 22),
+        xaxis_title = "Важность признака",
+        yaxis_title = None,
+        yaxis = dict(autorange = "reversed"),
+        margin = dict(t = 20, b = 30, l = 20, r = 20)
+    )
+
+    st.plotly_chart(fig, width = "stretch")
 
 
 
